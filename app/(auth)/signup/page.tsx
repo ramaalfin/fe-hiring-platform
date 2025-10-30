@@ -1,4 +1,6 @@
 "use client";
+
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,31 +16,42 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Mail, MailCheckIcon } from "lucide-react";
+import { Loader, Mail } from "lucide-react";
 import { registerMutationFn } from "@/lib/api";
-import { toast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function SignUp() {
+  return (
+    <Suspense
+      fallback={
+        <main className="h-full flex flex-col items-center justify-center text-center">
+          {" "}
+          <Loader className="animate-spin mb-4" size={28} />{" "}
+          <p>Memuat halaman pendaftaran...</p>{" "}
+        </main>
+      }
+    >
+      {" "}
+      <SignUpContent />{" "}
+    </Suspense>
+  );
+}
+
+function SignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorMessage = searchParams.get("error");
 
   const formSchema = z
     .object({
-      fullName: z.string().trim().min(1, {
-        message: "Name is required",
-      }),
-      email: z.string().trim().email().min(1, {
-        message: "Email is required",
-      }),
-      password: z.string().trim().min(1, {
-        message: "Password is required",
-      }),
-      confirmPassword: z.string().trim().min(1, {
-        message: "Confirm password is required",
-      }),
+      fullName: z.string().trim().min(1, { message: "Name is required" }),
+      email: z.string().trim().email().min(1, { message: "Email is required" }),
+      password: z.string().trim().min(1, { message: "Password is required" }),
+      confirmPassword: z
+        .string()
+        .trim()
+        .min(1, { message: "Confirm password is required" }),
     })
     .refine((val) => val.password === val.confirmPassword, {
       message: "Password does not match",
@@ -74,15 +87,21 @@ export default function SignUp() {
 
   return (
     <main className="w-full h-full p-8 rounded-md">
+      {" "}
       <h1 className="text-xl tracking-[-0.16px] font-bold mb-1.5 text-center sm:text-left text-neutral-1000">
-        Bergabung dengan Get Job
-      </h1>
+        Bergabung dengan Get Job{" "}
+      </h1>{" "}
       <p className="mb-4 text-center sm:text-left text-base font-normal text-neutral-1000">
         Sudah punya akun?{" "}
         <Link className="text-primary" href="/">
-          Masuk
-        </Link>
+          Masuk{" "}
+        </Link>{" "}
       </p>
+      {errorMessage && (
+        <div className="mb-4 rounded-md bg-red-100 text-red-800 p-3 text-sm">
+          {decodeURIComponent(errorMessage)}
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="mb-4">
@@ -102,6 +121,7 @@ export default function SignUp() {
               )}
             />
           </div>
+
           <div className="mb-4">
             <FormField
               control={form.control}
@@ -119,6 +139,7 @@ export default function SignUp() {
               )}
             />
           </div>
+
           <div className="mb-4">
             <FormField
               control={form.control}
@@ -140,6 +161,7 @@ export default function SignUp() {
               )}
             />
           </div>
+
           <div className="mb-4">
             <FormField
               control={form.control}
@@ -161,6 +183,7 @@ export default function SignUp() {
               )}
             />
           </div>
+
           <Button
             className="w-full text-[15px] h-[40px] text-neutral-90 font-semibold bg-secondary hover:bg-yellow-500"
             disabled={isPending}

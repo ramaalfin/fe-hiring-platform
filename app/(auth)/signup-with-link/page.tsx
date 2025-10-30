@@ -1,4 +1,6 @@
 "use client";
+
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -20,6 +22,21 @@ import { useMutation } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function SignUp() {
+  return (
+    <Suspense
+      fallback={
+        <main className="h-full flex flex-col items-center justify-center text-center">
+          <Loader className="animate-spin mb-4" size={28} />
+          <p>Memuat halaman pendaftaran...</p>
+        </main>
+      }
+    >
+      <SignUpContent />
+    </Suspense>
+  );
+}
+
+function SignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorMessage = searchParams.get("error");
@@ -56,19 +73,16 @@ export default function SignUp() {
         Bergabung dengan Get Job
       </h1>
       <p className="mb-4 text-center sm:text-left text-base font-normal text-neutral-1000">
-        Sudah punya akun?{" "}
+        Sudah punya akun?
         <Link className="text-primary" href="/">
           Masuk
         </Link>
       </p>
-
-      {/* tampilkan pesan error dari query param */}
       {errorMessage && (
         <div className="mb-4 rounded-md bg-red-100 text-red-800 p-3 text-sm">
           {decodeURIComponent(errorMessage)}
         </div>
       )}
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="mb-4">

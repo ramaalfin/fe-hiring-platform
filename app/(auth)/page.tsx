@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,7 +22,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-export default function Login() {
+export const dynamic = "force-dynamic"; // 🧠 nonaktifkan SSG di halaman ini
+
+// Komponen utama login
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorMessage = searchParams.get("error");
@@ -65,7 +69,6 @@ export default function Login() {
         </Link>
       </p>
 
-      {/* tampilkan pesan error dari query param */}
       {errorMessage && (
         <div className="mb-4 rounded-md bg-red-100 text-red-800 p-3 text-sm">
           {decodeURIComponent(errorMessage)}
@@ -114,5 +117,14 @@ export default function Login() {
         </form>
       </Form>
     </main>
+  );
+}
+
+// 🔒 Bungkus dengan Suspense agar aman dari prerender error
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="text-center py-10">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { verifyMagicRegisterMutationFn } from "@/lib/api";
@@ -9,6 +9,23 @@ import { toast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 export default function MagicRegisterVerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="h-full flex flex-col items-center justify-center text-center">
+          {" "}
+          <Loader className="animate-spin mb-4" size={28} />{" "}
+          <p>Memuat halaman verifikasi...</p>{" "}
+        </main>
+      }
+    >
+      {" "}
+      <VerifyContent />{" "}
+    </Suspense>
+  );
+}
+
+function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
