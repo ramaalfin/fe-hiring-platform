@@ -1,4 +1,3 @@
-import Link from "next/link";
 import React from "react";
 
 const Logo = (props: { url?: string; size?: string; fontSize?: string }) => {
@@ -9,8 +8,7 @@ const Logo = (props: { url?: string; size?: string; fontSize?: string }) => {
   sm:justify-start
     "
     >
-      <Link
-        href="/"
+      <div
         className="
              rounded-lg flex items-center border-2 dark:border-gray-200
              justify-center bg-gradient-to-br from-blue-500 to-primary to-90%
@@ -20,7 +18,7 @@ const Logo = (props: { url?: string; size?: string; fontSize?: string }) => {
         <span className="font-bold text-gray-50" style={{ fontSize: fontSize }}>
           S
         </span>
-      </Link>
+      </div>
     </div>
   );
 };
