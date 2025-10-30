@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { jwtDecode } from "jwt-decode";
 
-const candidateRoutes = ["/home", "/job-list", "/sessions"];
+const candidateRoutes = ["/home", "/job-list"];
 const adminRoutes = ["/admin/home", "/admin/job-list"];
 const publicRoutes = [
   "/",
@@ -18,7 +18,9 @@ const publicRoutes = [
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  const isCandidateRoute = candidateRoutes.some((route) => path.startsWith(route));
+  const isCandidateRoute = candidateRoutes.some((route) =>
+    path.startsWith(route)
+  );
   const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
   const isPublicRoute = publicRoutes.includes(path);
 
@@ -43,8 +45,7 @@ export default async function middleware(req: NextRequest) {
 
   // 🚧 Jika sudah login & akses route public → redirect ke /home atau /admin/home
   if (isPublicRoute && accessToken && userRole) {
-    const redirectUrl =
-      userRole === "ADMIN" ? "/admin/home" : "/home";
+    const redirectUrl = userRole === "ADMIN" ? "/admin/home" : "/home";
     return NextResponse.redirect(new URL(redirectUrl, req.url));
   }
 
