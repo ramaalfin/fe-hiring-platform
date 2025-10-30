@@ -4,7 +4,7 @@ export const buildSchema = (req: Record<string, string> = {}) => {
     const getField = (key: string, base: z.ZodTypeAny) => {
         const status = req?.[key];
 
-        if (status === "mandatory") return base.min(1, `${key} wajib diisi`);
+        if (status === "mandatory") return (base as z.ZodString).min(1, `${key} wajib diisi`);
         if (status === "off") return z.string().optional();
         if (status === "optional") return base.optional().nullable();
         return base.optional();
