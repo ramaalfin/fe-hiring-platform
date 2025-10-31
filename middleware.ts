@@ -15,17 +15,21 @@ const publicRoutes = [
   "/check-email",
 ];
 
-export default async function middleware(req: NextRequest) {
-  // const path = req.nextUrl.pathname;
-
+export default async function middleware(req: any) {
   // const isCandidateRoute = candidateRoutes.some((route) =>
   //   path.startsWith(route)
   // );
   // const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
   // const isPublicRoute = publicRoutes.includes(path);
 
-  // const accessToken = req.cookies.get("accessToken")?.value;
-  // const refreshToken = req.cookies.get("refreshToken")?.value;
+  const accessToken = req.cookies.get("accessToken")?.value;
+  const refreshToken = req.cookies.get("refreshToken")?.value;
+
+  // console.log("isCandidateRoute", isCandidateRoute);
+  // console.log("isAdminRoute", isAdminRoute);
+  // console.log("isPublicRoute", isPublicRoute);
+  console.log("accessToken", accessToken);
+  console.log("refreshToken", refreshToken);
 
   // // decode access token to get user role
   // let userRole: string | null = null;
