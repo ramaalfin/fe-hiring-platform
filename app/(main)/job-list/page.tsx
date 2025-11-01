@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import CandidateJobList from "../_components/JobList";
 
 const JobListPage = () => {
-  const token = cookies().get("accessToken")?.value;
+  const token = cookies().get("access_token")?.value;
 
   return (
     <div className="p-6">

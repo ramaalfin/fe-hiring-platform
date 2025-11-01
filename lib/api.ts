@@ -45,7 +45,9 @@ type SessionResponseType = {
 ======================== */
 
 export const loginMutationFn = async (data: LoginType) => {
-  const response = await API.post("/auth/login", data);
+  const response = await API.post("/auth/login", data, {
+    withCredentials: true
+  });
   return response.data; // berisi { message, user, token? }
 };
 

@@ -5,7 +5,7 @@ import RecruitBanner from "../_components/RecruiteBanner";
 import JobFormModal from "../_components/JobFormModal";
 
 const AdminJobListPage = () => {
-  const token = cookies().get("accessToken")?.value;
+  const token = cookies().get("access_token")?.value;
 
   return (
     <div className="p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">

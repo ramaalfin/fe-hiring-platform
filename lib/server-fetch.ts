@@ -2,24 +2,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function fetchWithAuth(req: NextRequest, targetUrl: string) {
-  const accessToken = req.cookies.get("accessToken")?.value;
-  const refreshToken = req.cookies.get("refreshToken")?.value;
+  const access_token = req.cookies.get("access_token")?.value;
+  const refresh_token = req.cookies.get("refresh_token")?.value;
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   let res = await fetch(`${baseUrl}${targetUrl}`, {
     headers: {
-      Cookie: `accessToken=${accessToken}`,
+      Cookie: `access_token=${access_token}`,
     },
     credentials: "include",
   });
 
   // Jika token expired, refresh token
-  if (res.status === 401 && refreshToken) {
+  if (res.status === 401 && refresh_token) {
     const refreshRes = await fetch(`${baseUrl}/auth/refresh`, {
       method: "POST",
       headers: {
-        Cookie: `refreshToken=${refreshToken}`,
+        Cookie: `refresh_token=${refresh_token}`,
       },
       credentials: "include",
     });

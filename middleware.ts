@@ -15,53 +15,52 @@ const publicRoutes = [
   "/check-email",
 ];
 
-export default async function middleware(req: any) {
-  // const isCandidateRoute = candidateRoutes.some((route) =>
-  //   path.startsWith(route)
-  // );
-  // const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
-  // const isPublicRoute = publicRoutes.includes(path);
+export default async function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
 
-  const accessToken = req.cookies.get("accessToken")?.value;
-  const refreshToken = req.cookies.get("refreshToken")?.value;
+  const isCandidateRoute = candidateRoutes.some((route) =>
+    path.startsWith(route)
+  );
+  const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
+  const isPublicRoute = publicRoutes.includes(path);
 
-  // console.log("isCandidateRoute", isCandidateRoute);
-  // console.log("isAdminRoute", isAdminRoute);
-  // console.log("isPublicRoute", isPublicRoute);
-  console.log("accessToken", accessToken);
-  console.log("refreshToken", refreshToken);
+  const access_token = req.cookies.get("access_token")?.value;
+  const refresh_token = req.cookies.get("refresh_token")?.value;
 
-  // // decode access token to get user role
-  // let userRole: string | null = null;
-  // if (accessToken) {
-  //   try {
-  //     const decodedToken: any = jwtDecode(accessToken);
-  //     userRole = decodedToken.role;
-  //   } catch (error) {
-  //     console.error("Failed to decode access token:", error);
-  //   }
-  // }
+  console.log("access_token", access_token);
+  console.log("refresh_token", refresh_token);
 
-  // // 🚧 Jika belum login & akses route proteksi → redirect ke root
-  // if ((isCandidateRoute || isAdminRoute) && !accessToken && !refreshToken) {
-  //   return NextResponse.redirect(new URL("/", req.url));
-  // }
+  // decode access token to get user role
+  let userRole: string | null = null;
+  if (access_token) {
+    try {
+      const decodedToken: any = jwtDecode(access_token);
+      userRole = decodedToken.role;
+    } catch (error) {
+      console.error("Failed to decode access token:", error);
+    }
+  }
 
-  // // 🚧 Jika sudah login & akses route public → redirect ke /home atau /admin/home
-  // if (isPublicRoute && accessToken && userRole) {
-  //   const redirectUrl = userRole === "ADMIN" ? "/admin/home" : "/home";
-  //   return NextResponse.redirect(new URL(redirectUrl, req.url));
-  // }
+  // 🚧 Jika belum login & akses route proteksi → redirect ke root
+  if ((isCandidateRoute || isAdminRoute) && !access_token && !refresh_token) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
 
-  // // 🛡️ Cegah CANDIDATE masuk ke halaman ADMIN
-  // if (isAdminRoute && userRole === "CANDIDATE") {
-  //   return NextResponse.redirect(new URL("/home", req.url));
-  // }
+  // 🚧 Jika sudah login & akses route public → redirect ke /home atau /admin/home
+  if (isPublicRoute && access_token && userRole) {
+    const redirectUrl = userRole === "ADMIN" ? "/admin/home" : "/home";
+    return NextResponse.redirect(new URL(redirectUrl, req.url));
+  }
 
-  // // 🛡️ Cegah ADMIN masuk ke halaman CANDIDATE
-  // if (isCandidateRoute && userRole === "ADMIN") {
-  //   return NextResponse.redirect(new URL("/admin/home", req.url));
-  // }
+  // 🛡️ Cegah CANDIDATE masuk ke halaman ADMIN
+  if (isAdminRoute && userRole === "CANDIDATE") {
+    return NextResponse.redirect(new URL("/home", req.url));
+  }
+
+  // 🛡️ Cegah ADMIN masuk ke halaman CANDIDATE
+  if (isCandidateRoute && userRole === "ADMIN") {
+    return NextResponse.redirect(new URL("/admin/home", req.url));
+  }
 
   return NextResponse.next();
 }
