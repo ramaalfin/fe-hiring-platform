@@ -1,23 +1,23 @@
 "use client";
 
-import useAuth from "@/hooks/use-auth";
 import React, { createContext, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getUserSessionQueryFn } from "@/lib/api";
 
 type UserType = {
   id: string;
   fullName: string;
   email: string;
-  isEmailVerified: boolean;
   role: "ADMIN" | "CANDIDATE";
+  isEmailVerified: boolean;
   createdAt: string;
   updatedAt: string;
 };
 
 type AuthContextType = {
   user?: UserType | null;
-  error: any;
   isLoading: boolean;
-  isFetching: boolean;
+  error?: any;
   refetch: () => void;
 };
 
@@ -26,12 +26,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { data: user, error, isLoading, isFetching, refetch } = useAuth();
+  const {
+    data: user,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["authUser"],
+    queryFn: getUserSessionQueryFn,
+    staleTime: Infinity,
+  });
 
   return (
-    <AuthContext.Provider
-      value={{ user, error, isLoading, isFetching, refetch }}
-    >
+    <AuthContext.Provider value={{ user, isLoading, error, refetch }}>
       {children}
     </AuthContext.Provider>
   );
@@ -39,8 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuthContext must be used within an AuthProvider");
-  }
+  if (!context)
+    throw new Error("useAuthContext must be used within AuthProvider");
   return context;
 };

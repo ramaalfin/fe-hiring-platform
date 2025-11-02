@@ -67,7 +67,9 @@ export const verifyMagicLoginMutationFn = async ({ code }: { code: string }) => 
 };
 
 export const registerMutationFn = async (data: RegisterType) => {
-  const response = await API.post("/auth/register", data);
+  const response = await API.post("/auth/register", data, {
+    withCredentials: true
+  });
   return response.data;
 };
 
@@ -102,7 +104,7 @@ export const verifyEmailMutationFn = async (data: VerifyEmailType) => {
 };
 
 export const getUserSessionQueryFn = async () => {
-  const response = await API.get("/sessions");
+  const response = await API.get("/auth/me");
   return response.data.user;
 };
 
