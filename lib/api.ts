@@ -46,7 +46,7 @@ type SessionResponseType = {
 
 export const loginMutationFn = async (data: LoginType) => {
   const response = await API.post("/auth/login", data, {
-    withCredentials: true
+    withCredentials: true,
   });
   return response.data; // berisi { message, user, token? }
 };
@@ -56,7 +56,11 @@ export const magicLoginMutationFn = async (data: { email: string }) => {
   return response.data;
 };
 
-export const verifyMagicLoginMutationFn = async ({ code }: { code: string }) => {
+export const verifyMagicLoginMutationFn = async ({
+  code,
+}: {
+  code: string;
+}) => {
   const response = await API.get("/auth/magic-login/verify", {
     params: { code },
     headers: {
@@ -68,7 +72,7 @@ export const verifyMagicLoginMutationFn = async ({ code }: { code: string }) => 
 
 export const registerMutationFn = async (data: RegisterType) => {
   const response = await API.post("/auth/register", data, {
-    withCredentials: true
+    withCredentials: true,
   });
   return response.data;
 };
@@ -78,7 +82,11 @@ export const magicRegisterMutationFn = async (data: { email: string }) => {
   return response.data;
 };
 
-export const verifyMagicRegisterMutationFn = async ({ code }: { code: string }) => {
+export const verifyMagicRegisterMutationFn = async ({
+  code,
+}: {
+  code: string;
+}) => {
   const response = await API.get("/auth/magic-register/verify", {
     params: { code },
     headers: {
@@ -104,7 +112,9 @@ export const verifyEmailMutationFn = async (data: VerifyEmailType) => {
 };
 
 export const getUserSessionQueryFn = async () => {
-  const response = await API.get("/auth/me");
+  const response = await API.get("/auth/me", {
+    withCredentials: true,
+  });
   return response.data.user;
 };
 
@@ -185,7 +195,10 @@ export const applyJobMutationFn = async (
   return res.data;
 };
 
-export const getApplicationsByAdminFn = async (adminId: string, token: string) => {
+export const getApplicationsByAdminFn = async (
+  adminId: string,
+  token: string
+) => {
   const res = await API.get(`/applications/admin/${adminId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
