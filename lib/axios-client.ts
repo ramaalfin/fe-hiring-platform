@@ -1,7 +1,6 @@
 // lib/axios-client.ts
 import axios from "axios";
 
-// --- axios utama untuk semua request user ---
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true, // ⬅️ penting agar cookie HttpOnly dikirim & diterima
