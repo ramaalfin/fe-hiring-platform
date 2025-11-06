@@ -35,7 +35,7 @@ API.interceptors.response.use(
 
       try {
         // Coba refresh token
-        await APIRefresh.get("/auth/refresh", {
+        await APIRefresh.post("/auth/refresh", {
           headers: {
             "x-skip-refresh": "1", // hindari trigger infinite refresh
           },

@@ -52,7 +52,9 @@ export const loginMutationFn = async (data: LoginType) => {
 };
 
 export const magicLoginMutationFn = async (data: { email: string }) => {
-  const response = await API.post("/auth/magic-login", data);
+  const response = await API.post("/auth/magic-login", data, {
+    withCredentials: true,
+  });
   return response.data;
 };
 
@@ -66,6 +68,7 @@ export const verifyMagicLoginMutationFn = async ({
     headers: {
       "x-skip-refresh": "1",
     },
+    withCredentials: true,
   });
   return response.data; // { message, user }
 };
@@ -78,7 +81,9 @@ export const registerMutationFn = async (data: RegisterType) => {
 };
 
 export const magicRegisterMutationFn = async (data: { email: string }) => {
-  const response = await API.post("/auth/magic-register", data);
+  const response = await API.post("/auth/magic-register", data, {
+    withCredentials: true,
+  });
   return response.data;
 };
 
@@ -92,22 +97,29 @@ export const verifyMagicRegisterMutationFn = async ({
     headers: {
       "x-skip-refresh": "1",
     },
+    withCredentials: true,
   });
   return response.data;
 };
 
 export const forgotPasswordMutationFn = async (data: ForgotPasswordType) => {
-  const response = await API.post("/auth/password/forgot", data);
+  const response = await API.post("/auth/password/forgot", data, {
+    withCredentials: true,
+  });
   return response.data;
 };
 
 export const resetPasswordMutationFn = async (data: ResetPasswordType) => {
-  const response = await API.post("/auth/password/reset", data);
+  const response = await API.post("/auth/password/reset", data, {
+    withCredentials: true,
+  });
   return response.data;
 };
 
 export const verifyEmailMutationFn = async (data: VerifyEmailType) => {
-  const response = await API.post("/auth/email/verify", data);
+  const response = await API.post("/auth/email/verify", data, {
+    withCredentials: true,
+  });
   return response.data;
 };
 
@@ -129,7 +141,9 @@ export const sessionDeleteMutationFn = async (id: string) => {
 };
 
 export const logoutMutationFn = async () => {
-  const response = await API.get("/auth/logout");
+  const response = await API.get("/auth/logout", {
+    withCredentials: true,
+  });
   return response.data;
 };
 
