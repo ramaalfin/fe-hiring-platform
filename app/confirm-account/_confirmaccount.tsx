@@ -70,7 +70,7 @@ const ConfirmAccount = () => {
             <Button
               type="submit"
               disabled={isPending}
-              className="w-full text-[15px] h-[40px] text-white font-semibold"
+              className="w-full text-[15px] h-[40px] text-white font-semibold hover:bg-opacity-90"
             >
               {isPending && <Loader className="animate-spin" />}
               Confirm account
