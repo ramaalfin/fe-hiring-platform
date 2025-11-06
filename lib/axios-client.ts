@@ -2,8 +2,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  baseURL: "",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true, // ⬅️ penting agar cookie HttpOnly dikirim & diterima
   timeout: 10000,
   headers: {
@@ -13,8 +12,7 @@ const API = axios.create({
 
 // --- axios khusus untuk refresh token ---
 const APIRefresh = axios.create({
-  // baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  baseURL: "",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true, // ⬅️ wajib juga
 });
 
@@ -36,7 +34,7 @@ API.interceptors.response.use(
 
       try {
         // Coba refresh token
-        await APIRefresh.post("/auth/refresh", null, {
+        await APIRefresh.post("/auth/refresh", {
           headers: {
             "x-skip-refresh": "1", // hindari trigger infinite refresh
           },
