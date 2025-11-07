@@ -33,10 +33,14 @@ function VerifyContent() {
   const { mutate } = useMutation({
     mutationFn: verifyMagicRegisterMutationFn,
     onSuccess: (data) => {
+      document.cookie = `access_token=${data.access_token}; path=/;`;
+      document.cookie = `refresh_token=${data.refresh_token}; path=/;`;
+
       toast({
         title: "Register Berhasil",
         description: data.message || "Selamat datang kembali!",
       });
+
       router.replace("/home");
     },
     onError: (error: any) => {

@@ -34,10 +34,14 @@ function VerifyContent() {
   const { mutate } = useMutation({
     mutationFn: verifyMagicLoginMutationFn,
     onSuccess: (data) => {
+      document.cookie = `access_token=${data.access_token}; path=/;`;
+      document.cookie = `refresh_token=${data.refresh_token}; path=/;`;
+
       toast({
         title: "Login Berhasil",
         description: data.message || "Selamat datang kembali!",
       });
+
       router.replace("/home");
     },
     onError: (error: any) => {

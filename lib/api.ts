@@ -1,5 +1,6 @@
 // lib/api.ts
 import API from "./axios-client";
+import Cookies from "js-cookie";
 
 type LoginType = {
   email: string;
@@ -48,6 +49,26 @@ export const loginMutationFn = async (data: LoginType) => {
   const response = await API.post("/auth/login", data, {
     withCredentials: true,
   });
+
+  const { access_token, refresh_token } = response.data;
+
+  // ✅ simpan manual ke cookies FE (bukan HttpOnly)
+  if (access_token) {
+    Cookies.set("access_token", access_token, {
+      secure: false,
+      sameSite: "Lax",
+      path: "/",
+    });
+  }
+
+  if (refresh_token) {
+    Cookies.set("refresh_token", refresh_token, {
+      secure: false,
+      sameSite: "Lax",
+      path: "/",
+    });
+  }
+
   return response.data; // berisi { message, user, token? }
 };
 
