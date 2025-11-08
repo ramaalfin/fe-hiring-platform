@@ -162,9 +162,20 @@ export const sessionDeleteMutationFn = async (id: string) => {
 };
 
 export const logoutMutationFn = async () => {
+  const accessToken = Cookies.get("access_token");
+
   const response = await API.get("/auth/logout", {
+    headers: {
+      Authorization: accessToken ? `Bearer ${accessToken}` : "",
+      "x-skip-refresh": "1",
+    },
     withCredentials: true,
   });
+
+  // Hapus token dari FE
+  Cookies.remove("access_token", { path: "/" });
+  Cookies.remove("refresh_token", { path: "/" });
+
   return response.data;
 };
 

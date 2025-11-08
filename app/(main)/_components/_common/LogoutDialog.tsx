@@ -15,7 +15,6 @@ import { useMutation } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback } from "react";
-import { useAuthContext } from "@/context/auth-provider";
 
 const LogoutDialog = ({
   isOpen,
@@ -25,14 +24,11 @@ const LogoutDialog = ({
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const router = useRouter();
-  const { refetch } = useAuthContext();
 
   const { mutate, isPending } = useMutation({
     mutationFn: logoutMutationFn,
     onSuccess: async () => {
-      // Pastikan data auth di-refresh setelah logout
-      await refetch();
-      router.replace("/");
+      router.replace("/signin");
     },
     onError: (error: any) => {
       toast({
