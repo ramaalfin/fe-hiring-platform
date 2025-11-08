@@ -7,6 +7,16 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllJobsQueryFn } from "@/lib/api";
 import ApplyFormModal from "./ApplyFormModal";
 import { format } from "date-fns";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { Briefcase, DollarSign, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Job {
   id: string;
@@ -21,11 +31,16 @@ interface Job {
     email: string;
   };
   minimumProfileInformationRequired: any;
+  hasApplied: boolean;
 }
 
 const CandidateJobList = ({ token }: { token: string }) => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  console.log("selectedJob", selectedJob);
+
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["jobs"],
@@ -46,7 +61,67 @@ const CandidateJobList = ({ token }: { token: string }) => {
     );
   }, [jobs, searchKeyword]);
 
-  const handleSelectJob = (job: Job) => setSelectedJob(job);
+  const handleSelectJob = (job: Job) => {
+    setSelectedJob(job);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+  };
+
+  const JobDetail = ({ job }: { job: Job }) => (
+    <>
+      <div className="flex flex-row justify-between items-start gap-4">
+        <div className="space-y-3 flex-1">
+          <div className="flex flex-row gap-4 items-start">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Briefcase className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex flex-col space-y-2 flex-1">
+              <span className="inline-flex items-center w-fit px-3 py-1 rounded-md text-xs font-semibold bg-primary text-primary-foreground">
+                {job.jobType}
+              </span>
+              <h3 className="font-bold text-foreground text-xl">
+                {job.jobName}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {job.createdByUser?.email || "Company"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <ApplyFormModal
+          token={token!}
+          bgColor="bg-secondary"
+          jobId={String(selectedJob?.id)}
+          jobName={selectedJob?.jobName}
+          companyName={selectedJob?.createdByUser?.email}
+          profileRequirements={selectedJob?.minimumProfileInformationRequired}
+          hasApplied={selectedJob?.hasApplied}
+        />
+      </div>
+
+      <div className="h-px my-4 bg-border"></div>
+
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-neutral-90">
+          <DollarSign className="w-5 h-5" />
+          <span className="font-semibold">
+            Rp{parseInt(job.minimumSalary).toLocaleString()} - Rp
+            {parseInt(job.maximumSalary).toLocaleString()}
+          </span>
+        </div>
+
+        <div className="prose prose-sm max-w-none">
+          <p className="text-neutral-90 whitespace-pre-line leading-relaxed">
+            {job.jobDescription}
+          </p>
+        </div>
+      </div>
+    </>
+  );
 
   if (isLoading)
     return <p className="text-center text-gray-500 mt-8">Loading jobs...</p>;
@@ -67,7 +142,7 @@ const CandidateJobList = ({ token }: { token: string }) => {
       />
 
       {filteredJobs.length > 0 ? (
-        <div className="grid grid-cols-5 gap-4 mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mt-4">
           {/* LEFT SECTION - Job List */}
           <div className="col-span-2 space-y-2 overflow-y-auto max-h-[80vh] pr-2">
             {filteredJobs.map((job) => {
@@ -118,7 +193,7 @@ const CandidateJobList = ({ token }: { token: string }) => {
           </div>
 
           {/* RIGHT SECTION - Job Detail */}
-          <div className="col-span-3 border border-neutral-40 p-4 rounded-lg bg-white">
+          <div className="hidden lg:block col-span-3 border border-neutral-40 p-4 rounded-lg bg-white">
             {selectedJob ? (
               <>
                 <div className="flex flex-row justify-between items-center">
@@ -188,6 +263,34 @@ const CandidateJobList = ({ token }: { token: string }) => {
             Create a job opening now and start the candidate process.
           </p>
         </div>
+      )}
+
+      {isMobile && (
+        <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="border-b border-border pb-4">
+              <div className="flex items-center justify-between">
+                <DrawerTitle className="text-xl font-bold">
+                  Job Details
+                </DrawerTitle>
+                <DrawerClose asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCloseDrawer}
+                    className="h-8 w-8"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </DrawerClose>
+              </div>
+            </DrawerHeader>
+
+            <div className="p-4 overflow-y-auto">
+              {selectedJob && <JobDetail job={selectedJob} />}
+            </div>
+          </DrawerContent>
+        </Drawer>
       )}
     </div>
   );

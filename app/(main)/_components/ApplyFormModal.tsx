@@ -19,6 +19,7 @@ export default function ApplyFormModal({
   jobName,
   companyName,
   profileRequirements,
+  hasApplied,
 }: {
   token?: string;
   bgColor?: string;
@@ -27,6 +28,7 @@ export default function ApplyFormModal({
   jobName?: string;
   companyName?: string;
   profileRequirements?: {};
+  hasApplied?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -34,14 +36,18 @@ export default function ApplyFormModal({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="default"
-          className={`${bgColor} ${color} font-semibold hover:bg-opacity-90`}
+          disabled={hasApplied}
+          className={`${
+            hasApplied
+              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              : "bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+          }`}
         >
-          Apply
+          {hasApplied ? "Already Applied" : "Apply Now"}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
+      <DialogContent className="w-96 lg:max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-lg">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>Apply {jobName}</DialogTitle>
         </DialogHeader>

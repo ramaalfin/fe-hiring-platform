@@ -30,7 +30,7 @@ export default function GestureCameraModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl p-0 overflow-hidden">
+      <DialogContent className="w-96 lg:max-w-xl p-0 overflow-hidden rounded-lg">
         <DialogHeader className="p-4 border-b">
           <div className="">
             <h1 className="text-xl font-semibold">
