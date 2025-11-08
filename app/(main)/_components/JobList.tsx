@@ -36,8 +36,6 @@ interface Job {
 
 const CandidateJobList = ({ token }: { token: string }) => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  console.log("selectedJob", selectedJob);
-
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isMobile = useIsMobile();

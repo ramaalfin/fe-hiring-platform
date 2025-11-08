@@ -45,7 +45,7 @@ const LogoutDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent>
+      <DialogContent className="w-96">
         <DialogHeader>
           <DialogTitle>Konfirmasi Logout</DialogTitle>
           <DialogDescription>
