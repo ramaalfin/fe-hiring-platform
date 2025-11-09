@@ -25,7 +25,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { applyJobMutationFn } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { buildSchema } from "@/utils/buildSchema";
+import { buildSchema } from "@/schemas/buildSchema";
 import { toast } from "@/hooks/use-toast";
 
 const dummyLocations = [

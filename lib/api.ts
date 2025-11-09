@@ -52,7 +52,6 @@ export const loginMutationFn = async (data: LoginType) => {
 
   const { access_token, refresh_token } = response.data;
 
-  // ✅ simpan manual ke cookies FE (bukan HttpOnly)
   if (access_token) {
     Cookies.set("access_token", access_token, {
       secure: false,
@@ -69,7 +68,7 @@ export const loginMutationFn = async (data: LoginType) => {
     });
   }
 
-  return response.data; // berisi { message, user, token? }
+  return response.data;
 };
 
 export const magicLoginMutationFn = async (data: { email: string }) => {

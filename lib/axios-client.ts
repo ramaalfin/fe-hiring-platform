@@ -3,14 +3,13 @@ import axios from "axios";
 import Cookies from "js-cookie";
 
 const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL, // e.g. https://be-hiring-platform.vercel.app/api/v1
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// attach access token from cookie to Authorization header
 API.interceptors.request.use((config) => {
   try {
     const token = Cookies.get("access_token");
@@ -25,7 +24,6 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// response interceptor: handle 401 -> try refresh
 API.interceptors.response.use(
   (res) => res,
   async (error) => {
