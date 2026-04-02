@@ -5,14 +5,13 @@ const candidateRoutes = ["/home", "/job-list"];
 const adminRoutes = ["/admin/home", "/admin/job-list"];
 const publicRoutes = [
   "/",
-  "/signin",
-  "/magic-login",
-  "/magic-login/verify",
   "/signup",
   "/confirm-account",
   "/forgot-password",
   "/reset-password",
   "/check-email",
+  "/magic-login/verify",
+  "/magic-signup/verify",
 ];
 
 export default async function middleware(req: NextRequest) {
@@ -39,7 +38,7 @@ export default async function middleware(req: NextRequest) {
 
   // 🚨 Jika belum login dan akses route private → redirect ke signin
   if ((isCandidateRoute || isAdminRoute) && !access_token) {
-    return NextResponse.redirect(new URL("/signin", req.url));
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   // 🚨 Jika sudah login dan akses route public → redirect otomatis

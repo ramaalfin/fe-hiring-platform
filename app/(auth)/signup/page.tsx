@@ -1,11 +1,18 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { Loader, KeySquare, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
+
+import { magicRegisterMutationFn, registerMutationFn } from "@/lib/api";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { toast } from "@/hooks/use-toast";
+
 import {
   Form,
   FormControl,
@@ -16,206 +23,173 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader, Mail } from "lucide-react";
-import { registerMutationFn } from "@/lib/api";
-import { useMutation } from "@tanstack/react-query";
-import { getErrorMessage } from "@/lib/get-error-message";
 
-export default function SignUp() {
-  return (
-    <Suspense
-      fallback={
-        <main className="h-full flex flex-col items-center justify-center text-center">
-          {" "}
-          <Loader className="animate-spin mb-4" size={28} />{" "}
-          <p>Memuat halaman pendaftaran...</p>{" "}
-        </main>
-      }
-    >
-      {" "}
-      <SignUpContent />{" "}
-    </Suspense>
-  );
-}
+export const dynamic = "force-dynamic";
 
 function SignUpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const errorMessage = searchParams.get("error");
+  const [activeTab, setActiveTab] = useState<"password" | "magic">("password");
 
-  const formSchema = z
-    .object({
-      fullName: z.string().trim().min(1, { message: "Name is required" }),
-      email: z.string().trim().email().min(1, { message: "Email is required" }),
-      password: z.string().trim().min(1, { message: "Password is required" }),
-      confirmPassword: z
-        .string()
-        .trim()
-        .min(1, { message: "Confirm password is required" }),
-    })
-    .refine((val) => val.password === val.confirmPassword, {
-      message: "Password does not match",
-      path: ["confirmPassword"],
-    });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: registerMutationFn,
-    onSuccess: () => {
-      router.replace("/check-email");
-    },
-    onError: (error: any) => {
-      form.setError("email", {
-        type: "manual",
-        message: getErrorMessage(error) || "Email tidak ditemukan.",
+  const { mutate: mutateMagic, isPending: pendingMagic } = useMutation({
+    mutationFn: magicRegisterMutationFn,
+    onSuccess: () => router.replace("/check-email"),
+    onError: (error) => {
+      toast({
+        title: "Pendaftaran Gagal",
+        description: getErrorMessage(error) || "Terjadi kesalahan saat pendaftaran",
+        variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    mutate(values);
-  };
+  const { mutate: mutatePassword, isPending: pendingPassword } = useMutation({
+    mutationFn: registerMutationFn,
+    onSuccess: () => router.replace("/check-email"),
+    onError: (error) => {
+      toast({
+        title: "Pendaftaran Gagal",
+        description: getErrorMessage(error) || "Terjadi kesalahan saat pendaftaran",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const magicSchema = z.object({
+    email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
+  });
+
+  const passwordSchema = z.object({
+    fullName: z.string().trim().min(3, "Nama lengkap harus minimal 3 karakter"),
+    email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
+    password: z.string().trim().min(6, "Password minimal 6 karakter"),
+    confirmPassword: z.string().trim().min(1, "Konfirmasi password wajib diisi"),
+  }).refine((val) => val.password === val.confirmPassword, {
+    message: "Password tidak cocok",
+    path: ["confirmPassword"],
+  });
+
+  const formMagic = useForm({
+    resolver: zodResolver(magicSchema),
+    defaultValues: { email: "" },
+  });
+
+  const formPassword = useForm({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
+  });
+
+  const isPending = pendingMagic || pendingPassword;
+
+  const onMagicSubmit = (values: z.infer<typeof magicSchema>) => mutateMagic(values);
+  const onPasswordSubmit = (values: z.infer<typeof passwordSchema>) => mutatePassword(values);
 
   return (
-    <main className="w-full h-full p-8 rounded-md">
-      {" "}
-      <h1 className="text-xl tracking-[-0.16px] font-bold mb-1.5 text-center sm:text-left text-neutral-1000">
-        Bergabung dengan Get Job{" "}
-      </h1>{" "}
-      <p className="mb-4 text-center sm:text-left text-base font-normal text-neutral-1000">
-        Sudah punya akun?{" "}
-        <Link className="text-primary" href="/">
-          Masuk{" "}
-        </Link>{" "}
-      </p>
+    <main className="w-full h-full flex flex-col justify-center">
+      <div className="mb-8 flex flex-col items-center sm:items-start text-center sm:text-left">
+        <h1 className="text-2xl font-bold mb-2 text-neutral-1000 tracking-tight">Bergabung Sekarang</h1>
+        <p className="text-neutral-60 text-sm">
+          Sudah memiliki akun?{" "}
+          <Link href="/" className="text-primary font-medium hover:underline transition-colors">
+            Masuk di sini
+          </Link>
+        </p>
+      </div>
+
       {errorMessage && (
-        <div className="mb-4 rounded-md bg-red-100 text-red-800 p-3 text-sm">
-          {decodeURIComponent(errorMessage)}
+        <div className="mb-6 rounded-lg bg-red-50 text-red-600 p-3 text-sm border border-red-100 flex items-start">
+          <span className="block sm:inline">{decodeURIComponent(errorMessage)}</span>
         </div>
       )}
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="mb-4">
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="dark:text-[#f1f7feb5] text-sm">
-                    Name
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Techwithemma" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
 
-          <div className="mb-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm text-neutral-90">
-                    Alamat Email
-                  </FormLabel>
-                  <FormControl>
-                    <Input autoComplete="off" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+      <div className="flex p-1.5 bg-neutral-100/80 rounded-xl mb-6 w-full relative border border-neutral-200/50">
+        <button
+          onClick={() => setActiveTab("password")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${
+            activeTab === "password"
+              ? "bg-white text-neutral-1000 shadow-sm border border-neutral-200/50"
+              : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/30"
+          }`}
+        >
+          <KeySquare className="w-4 h-4" /> Password
+        </button>
+        <button
+          onClick={() => setActiveTab("magic")}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 ${
+            activeTab === "magic"
+              ? "bg-white text-neutral-1000 shadow-sm border border-neutral-200/50"
+              : "text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/30"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" /> Magic Link
+        </button>
+      </div>
 
-          <div className="mb-4">
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm text-neutral-90">
-                    Password
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••••••"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="mb-4">
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="dark:text-[#f1f7feb5] text-sm">
-                    Confirm Password
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••••••"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <Button
-            className="w-full text-[15px] h-[40px] text-neutral-90 font-semibold bg-secondary hover:bg-yellow-500"
-            disabled={isPending}
-            type="submit"
-          >
-            {isPending && <Loader className="animate-spin" />}
-            Daftar
-          </Button>
-
-          <div className="mb-6 mt-6 flex items-center justify-center">
-            <div
-              aria-hidden="true"
-              className="w-full border border-neutral-60"
-              data-orientation="horizontal"
-              role="separator"
-            ></div>
-            <h1 className="mx-4 text-sm text-neutral-60">or</h1>
-            <div
-              aria-hidden="true"
-              className="w-full border border-neutral-60"
-              data-orientation="horizontal"
-              role="separator"
-            ></div>
-          </div>
-        </form>
-      </Form>
-      <Link className="flex items-center gap-2" href="/signup-with-link">
-        <Button variant="outline" className="w-full h-[40px] text-neutral-1000">
-          <Mail className="!w-3 font-bold" />
-          Kirim link melalui email
-        </Button>
-      </Link>
+      <div className="transition-all duration-300 animate-in fade-in slide-in-from-bottom-2">
+        {activeTab === "password" ? (
+          <Form {...formPassword} key="password-form">
+            <form onSubmit={formPassword.handleSubmit(onPasswordSubmit)} className="space-y-4">
+              <FormField control={formPassword.control} name="fullName" render={({ field }) => (
+                <FormItem><FormLabel className="text-neutral-90 font-medium">Nama Lengkap</FormLabel><FormControl>
+                  <Input placeholder="John Doe" className="h-11 bg-white/50 focus-visible:ring-primary/40 focus-visible:bg-white text-[15px] rounded-xl transition-colors text-neutral-1000" {...field} />
+                </FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={formPassword.control} name="email" render={({ field }) => (
+                <FormItem><FormLabel className="text-neutral-90 font-medium">Alamat Email</FormLabel><FormControl>
+                  <Input placeholder="contoh@email.com" className="h-11 bg-white/50 focus-visible:ring-primary/40 focus-visible:bg-white text-[15px] rounded-xl transition-colors text-neutral-1000" {...field} />
+                </FormControl><FormMessage /></FormItem>
+              )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={formPassword.control} name="password" render={({ field }) => (
+                  <FormItem><FormLabel className="text-neutral-90 font-medium">Password</FormLabel><FormControl>
+                    <Input type="password" placeholder="••••••••" className="h-11 bg-white/50 focus-visible:ring-primary/40 focus-visible:bg-white text-[15px] rounded-xl transition-colors text-neutral-1000" {...field} />
+                  </FormControl><FormMessage /></FormItem>
+                )} />
+                <FormField control={formPassword.control} name="confirmPassword" render={({ field }) => (
+                  <FormItem><FormLabel className="text-neutral-90 font-medium">Konfirmasi</FormLabel><FormControl>
+                    <Input type="password" placeholder="••••••••" className="h-11 bg-white/50 focus-visible:ring-primary/40 focus-visible:bg-white text-[15px] rounded-xl transition-colors text-neutral-1000" {...field} />
+                  </FormControl><FormMessage /></FormItem>
+                )} />
+              </div>
+              <div className="pt-3">
+                <Button disabled={isPending} className="w-full h-12 text-[15px] font-semibold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200" type="submit">
+                  {isPending ? <Loader className="animate-spin w-5 h-5 justify-center" /> : "Daftar Akun"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        ) : (
+          <Form {...formMagic} key="magic-form">
+            <form onSubmit={formMagic.handleSubmit(onMagicSubmit)} className="space-y-4">
+              <div className="mb-2 text-[15px] leading-relaxed text-neutral-60 bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <span>
+                  Pendaftaran super cepat dan aman hanya dengan satu klik lewat email Anda.
+                </span>
+              </div>
+              <FormField control={formMagic.control} name="email" render={({ field }) => (
+                <FormItem><FormLabel className="text-neutral-90 font-medium">Alamat Email</FormLabel><FormControl>
+                  <Input placeholder="contoh@email.com" className="h-12 bg-white/50 focus-visible:ring-primary/40 focus-visible:bg-white text-[15px] rounded-xl transition-colors text-neutral-1000" {...field} />
+                </FormControl><FormMessage /></FormItem>
+              )} />
+              <div className="pt-3">
+                <Button disabled={isPending} className="w-full h-12 text-[15px] font-semibold bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200" type="submit">
+                  {isPending ? <Loader className="animate-spin w-5 h-5 justify-center" /> : "Kirim Magic Link"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        )}
+      </div>
     </main>
+  );
+}
+
+export default function SignUp() {
+  return (
+    <Suspense fallback={<div className="h-full flex items-center justify-center py-10"><Loader className="animate-spin text-primary" size={32} /></div>}>
+      <SignUpContent />
+    </Suspense>
   );
 }

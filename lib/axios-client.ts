@@ -43,7 +43,7 @@ API.interceptors.response.use(
           if (typeof window !== "undefined") {
             Cookies.remove("access_token");
             Cookies.remove("refresh_token");
-            window.location.href = "/signin";
+            window.location.href = "/";
           }
           return Promise.reject(error);
         }
@@ -81,7 +81,7 @@ API.interceptors.response.use(
         if (typeof window !== "undefined") {
           Cookies.remove("access_token");
           Cookies.remove("refresh_token");
-          window.location.href = "/signin";
+          window.location.href = "/";
         }
         return Promise.reject(err);
       }
