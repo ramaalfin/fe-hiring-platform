@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { Loader, PartyPopper } from "lucide-react";
@@ -12,17 +12,29 @@ function MagicSignupVerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
+  const hasExecuted = useRef(false);
 
   const { mutate, isPending } = useMutation({
     mutationFn: verifyMagicRegisterMutationFn,
-    onSuccess: (data) => {
-      const { access_token, refresh_token, user } = data;
+    onSuccess: (apiResponse) => {
+      console.log("🎉 Magic register SUCCESS - API Response:", apiResponse);
+      
+      // apiResponse is now directly from backend: { success: true, message: "...", data: { user, access_token, refresh_token } }
+      if (!apiResponse || !apiResponse.success) {
+        console.error("❌ Unexpected response format:", apiResponse);
+        throw new Error("Invalid response format");
+      }
+
+      const { user, access_token, refresh_token } = apiResponse.data;
+      console.log("🎉 Extracted data:", { user, access_token, refresh_token });
 
       if (access_token) {
         Cookies.set("access_token", access_token, { path: "/" });
+        console.log("✅ Access token set");
       }
       if (refresh_token) {
         Cookies.set("refresh_token", refresh_token, { path: "/" });
+        console.log("✅ Refresh token set");
       }
 
       toast({
@@ -31,25 +43,63 @@ function MagicSignupVerifyContent() {
       });
 
       const redirectUrl = user?.role === "ADMIN" ? "/admin/home" : "/home";
-      router.replace(redirectUrl);
+      console.log("🚀 Redirecting to:", redirectUrl);
+      
+      setTimeout(() => {
+        router.replace(redirectUrl);
+      }, 500);
     },
     onError: (error: any) => {
+      console.error("❌ Magic register ERROR:", error);
+      console.error("❌ Error message:", error?.message);
+      console.error("❌ Error response:", error?.response);
+      console.error("❌ Error response data:", error?.response?.data);
+      console.error("❌ Error response status:", error?.response?.status);
+      
+      // Extract error message from response if available
+      const backendMessage = error?.response?.data?.error?.message 
+        || error?.response?.data?.message;
+      
+      let errorMessage = backendMessage || "Terjadi kesalahan saat verifikasi.";
+      let errorDescription = "";
+      
+      // Provide helpful context based on error
+      if (error?.response?.status === 401 || backendMessage?.includes("expired") || backendMessage?.includes("invalid")) {
+        errorMessage = "Link Tidak Valid atau Sudah Kedaluwarsa";
+        errorDescription = "Link pendaftaran hanya dapat digunakan satu kali dan berlaku selama 30 menit. Silakan minta link baru.";
+      } else if (error?.response?.status === 429) {
+        errorMessage = "Terlalu Banyak Percobaan";
+        errorDescription = "Anda telah mencoba terlalu banyak kali. Silakan tunggu beberapa saat.";
+      }
+      
       toast({
-        title: "Pendaftaran Gagal",
-        description: "Link pendaftaran tidak valid atau sudah kedaluwarsa.",
+        title: errorMessage,
+        description: errorDescription || backendMessage || "Silakan coba lagi atau minta link baru.",
         variant: "destructive",
       });
-      router.replace("/");
+      
+      setTimeout(() => {
+        router.replace("/");
+      }, 2000); // Increased to 2 seconds so user can read the message
     },
   });
 
   useEffect(() => {
+    // Prevent double execution in React Strict Mode (development)
+    if (hasExecuted.current) {
+      console.log("⏭️ Skipping duplicate execution");
+      return;
+    }
+
     if (code) {
+      console.log("🚀 Executing magic register verification");
+      hasExecuted.current = true;
       mutate({ code });
     } else {
       router.replace("/");
     }
-  }, [code, mutate, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px]">

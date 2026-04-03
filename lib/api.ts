@@ -86,11 +86,12 @@ export const verifyMagicLoginMutationFn = async ({
   const response = await API.get("/auth/magic-login/verify", {
     params: { code },
     headers: {
-      "x-skip-refresh": "1",
+      "x-skip-refresh": "1", // Don't attempt token refresh on 401
     },
     withCredentials: true,
   });
-  return response.data; // { message, user }
+  console.log("🔍 verifyMagicLoginMutationFn raw response:", response);
+  return response.data; // { success, message, data: { user, access_token, refresh_token } }
 };
 
 export const registerMutationFn = async (data: RegisterType) => {
@@ -115,11 +116,12 @@ export const verifyMagicRegisterMutationFn = async ({
   const response = await API.get("/auth/magic-register/verify", {
     params: { code },
     headers: {
-      "x-skip-refresh": "1",
+      "x-skip-refresh": "1", // Don't attempt token refresh on 401
     },
     withCredentials: true,
   });
-  return response.data;
+  console.log("🔍 verifyMagicRegisterMutationFn raw response:", response);
+  return response.data; // { success, message, data: { user, access_token, refresh_token } }
 };
 
 export const forgotPasswordMutationFn = async (data: ForgotPasswordType) => {

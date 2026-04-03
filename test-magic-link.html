@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Magic Link</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Magic Link Test Tool</h1>
+    
+    <div class="test-section">
+        <h2>Test Magic Link Verification</h2>
+        <p>Paste your magic link code here:</p>
+        <input type="text" id="codeInput" placeholder="Enter verification code" style="width: 100%; padding: 10px;">
+        <br><br>
+        <button onclick="testMagicRegister()">Test Magic Register</button>
+        <button onclick="testMagicLogin()">Test Magic Login</button>
+        <br><br>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5001/api/v1';
+
+        async function testMagicRegister() {
+            const code = document.getElementById('codeInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!code) {
+                resultDiv.innerHTML = '<p class="error">Please enter a verification code</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>Testing magic register...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/magic-register/verify?code=${code}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>Response Status: ${response.status}</h3>
+                    <h4>Response Headers:</h4>
+                    <pre>${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</pre>
+                    <h4>Response Body:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    ${response.ok ? '<p class="success">✅ Request successful!</p>' : '<p class="error">❌ Request failed!</p>'}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3 class="error">Error occurred:</h3>
+                    <pre>${error.message}</pre>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+
+        async function testMagicLogin() {
+            const code = document.getElementById('codeInput').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!code) {
+                resultDiv.innerHTML = '<p class="error">Please enter a verification code</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p>Testing magic login...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/magic-login/verify?code=${code}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>Response Status: ${response.status}</h3>
+                    <h4>Response Headers:</h4>
+                    <pre>${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</pre>
+                    <h4>Response Body:</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    ${response.ok ? '<p class="success">✅ Request successful!</p>' : '<p class="error">❌ Request failed!</p>'}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3 class="error">Error occurred:</h3>
+                    <pre>${error.message}</pre>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

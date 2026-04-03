@@ -192,9 +192,14 @@ function SignInContent() {
             <form onSubmit={formMagic.handleSubmit(onMagicSubmit)} className="space-y-5">
               <div className="mb-2 text-[15px] leading-relaxed text-neutral-60 bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <span>
-                  Kami akan mengirimkan link sekali pakai ke email Anda. Anda bisa langsung masuk tanpa perlu memasukkan password!
-                </span>
+                <div className="space-y-1">
+                  <p>
+                    Kami akan mengirimkan link sekali pakai ke email Anda. Anda bisa langsung masuk tanpa perlu memasukkan password!
+                  </p>
+                  <p className="text-sm text-neutral-500">
+                    <strong>Catatan:</strong> Link hanya berlaku 30 menit dan hanya dapat digunakan satu kali.
+                  </p>
+                </div>
               </div>
               <FormField
                 control={formMagic.control}

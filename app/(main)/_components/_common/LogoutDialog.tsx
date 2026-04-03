@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback } from "react";
+import Cookies from "js-cookie";
 
 const LogoutDialog = ({
   isOpen,
@@ -27,10 +28,30 @@ const LogoutDialog = ({
 
   const { mutate, isPending } = useMutation({
     mutationFn: logoutMutationFn,
-    onSuccess: async () => {
-      router.replace("/");
+    onSuccess: async (response) => {
+      console.log("🎉 Logout SUCCESS:", response);
+      
+      setIsOpen(false);
+      
+      // Clear tokens manually to ensure they're removed
+      Cookies.remove("access_token", { path: "/" });
+      Cookies.remove("refresh_token", { path: "/" });
+      console.log("✅ Tokens cleared");
+      
+      toast({
+        title: "Logout Berhasil",
+        description: "Anda telah berhasil keluar dari sesi ini.",
+      });
+      
+      console.log("🚀 Navigating to /");
+      // Small delay to show toast before navigation
+      setTimeout(() => {
+        window.location.href = "/"; // Use window.location for hard refresh
+      }, 500);
     },
     onError: (error: any) => {
+      console.error("❌ Logout ERROR:", error);
+      
       toast({
         title: "Logout gagal",
         description: error.message || "Terjadi kesalahan saat logout",
