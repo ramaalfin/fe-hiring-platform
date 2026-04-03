@@ -5,7 +5,7 @@ import { ApiErrorResponse } from "@/types/api";
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // Increased to 30 seconds for slow operations (email sending, etc.)
   headers: {
     "Content-Type": "application/json",
   },
