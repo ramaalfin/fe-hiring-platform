@@ -34,7 +34,7 @@ function SignUpContent() {
 
   const { mutate: mutateMagic, isPending: pendingMagic } = useMutation({
     mutationFn: magicRegisterMutationFn,
-    onSuccess: () => router.replace("/check-email"),
+    onSuccess: () => router.replace("/check-email?type=register"),
     onError: (error) => {
       toast({
         title: "Pendaftaran Gagal",

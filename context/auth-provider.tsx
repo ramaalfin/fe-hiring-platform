@@ -9,7 +9,7 @@ type UserType = {
   fullName: string;
   email: string;
   role: "ADMIN" | "CANDIDATE";
-  isEmailVerified: boolean;
+  isDefaultPassword?: boolean;
   createdAt: string;
   updatedAt: string;
 };

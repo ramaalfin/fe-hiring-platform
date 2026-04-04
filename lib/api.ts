@@ -251,3 +251,18 @@ export const getApplicationsByAdminFn = async (
   });
   return res.data.applications;
 };
+
+/* ========================
+   USER PROFILE
+======================== */
+
+export const updateUserProfileMutationFn = async (data: {
+  fullName?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}) => {
+  const response = await API.patch("/user/profile", data, {
+    withCredentials: true,
+  });
+  return response.data;
+};

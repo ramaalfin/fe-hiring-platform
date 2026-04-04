@@ -9,6 +9,7 @@ import {
   MoonStarIcon,
   SunIcon,
   Briefcase,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -60,6 +61,11 @@ const Asidebar = () => {
           url: "/admin/job-list",
           icon: Briefcase,
         },
+        {
+          title: "Profile",
+          url: "/profile",
+          icon: User,
+        },
       ];
     }
 
@@ -74,6 +80,11 @@ const Asidebar = () => {
           title: "Job List",
           url: "/job-list",
           icon: Briefcase,
+        },
+        {
+          title: "Profile",
+          url: "/profile",
+          icon: User,
         },
       ];
     }
