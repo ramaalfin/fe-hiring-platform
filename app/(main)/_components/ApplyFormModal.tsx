@@ -47,7 +47,7 @@ export default function ApplyFormModal({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="w-96 lg:max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-lg">
+      <DialogContent className="w-96 lg:w-full max-h-[90vh] overflow-y-auto p-0 gap-0 rounded-lg">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>Apply {jobName}</DialogTitle>
         </DialogHeader>
