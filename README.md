@@ -1,112 +1,106 @@
 # GetJob - Enterprise Hiring Platform (Frontend)
 
-> A full-stack hiring platform with advanced security, performance optimization, and modern authentication.
+> A comprehensive, modern full-stack hiring platform frontend built with Next.js 14, React, and TypeScript. It features advanced interactions, secure authentication flows, a dynamic data approach, and touchless gesture interactions.
 
 ## 🚀 Key Features
 
-- **Magic Link Authentication**: Passwordless login/signup with one-time codes
-- **Email Verification**: Middleware-enforced verification before access
-- **Password Security**: Default password detection with forced updates
-- **Gesture Capture**: TensorFlow.js-powered touchless document scanning
-- **Performance**: 10x faster queries with strategic database indexing
-- **Security**: 3-tier rate limiting + IDOR protection + RBAC
-- **Email Service**: Resend API integration (99.9% delivery rate)
-- **Database Seeder**: Instant demo environment with realistic data
-
-## 📊 Performance Metrics
-
-- 95% reduction in spam accounts
-- 80% reduction in malicious traffic
-- 40% fewer redundant API requests
-- 10x faster database queries (500ms → 50ms)
-- 99.9% email delivery rate
+*   **Magic Link Authentication:** Passwordless login and signup supporting frictionless user onboarding using one-time verification links.
+*   **Role-Based Access Control (RBAC):** Distinct dashboards and routing experiences for `ADMIN` and `CANDIDATE` roles, deeply protected via Next.js middleware and JWT parsing mapping accurately to `app/(main)/admin` and `app/(main)/home`.
+*   **Gesture-Based Form Submission:** Utilizing `@tensorflow-models/handpose` and `@mediapipe/hands`, candidates can capture document scans or selfies simply by performing specific hand poses (counting to 3) directly via their browser webcam.
+*   **Dynamic Application Forms:** Forms scale based on role requirements. Forms process dynamic Zod validations leveraging the backend schemas using `buildSchema.ts`.
+*   **Performance & Caching:** Leverages TanStack React Query (`@tanstack/react-query`) for optimized data-fetching, caching, and state synchronization with the REST API.
+*   **Responsive UI:** Fully responsive design built out using Tailwind CSS, Shadcn UI components, Radix UI primitives, resulting in accessible, clean, and interactive interfaces.
 
 ## 🛠️ Tech Stack
 
-**Frontend**: Next.js 14, TypeScript, TailwindCSS, Shadcn/ui, TanStack Query
-**Backend**: Express.js, Prisma ORM, PostgreSQL
-**AI/ML**: TensorFlow.js, MediaPipe
-**Services**: Resend API, Cloudinary
-**Deploy**: Railway, Vercel
+*   **Framework:** Next.js 14.2 (App Router)
+*   **Language:** TypeScript
+*   **Styling:** Tailwind CSS, PostCSS, class-variance-authority, clsx
+*   **UI Components:** Shadcn/UI, Radix UI (accessible primitives like Dialog, Dropdown, Checkbox), Lucide React
+*   **State Management:** TanStack React Query (Server State), Zustand (Global Client State)
+*   **Forms & Validation:** React Hook Form, Zod
+*   **AI/Webcam Interaction:** TensorFlow.js (`@tensorflow/tfjs`), MediaPipe Hands, `react-webcam`
+*   **Network/API:** Axios, JS Cookie, JWT Decode
 
-## 📋 Table of Contents
-1. [Quick Start](#-quick-start)
-2. [Environment Setup](#-environment-setup)
-3. [Features Details](#-features-details)
-4. [Deployment](#-deployment)
+## 📂 Project Structure
 
----
+```text
+fe-hiring-platform/
+├── app/                  # Next.js App Router root directory
+│   ├── (auth)/           # Route group for authentication pages (public)
+│   │   ├── magic-login/  # Verification page for Magic Link login
+│   │   ├── magic-signup/ # Verification page for Magic Link signup
+│   │   ├── signup/       # Candidate user registration
+│   │   └── page.tsx      # Main Login entrypoint (Password & Magic Link)
+│   ├── (main)/           # Route group for authenticated application pages
+│   │   ├── _components/  # Layout components like Header, Sidebar, and apply forms
+│   │   ├── admin/        # Admin portal containing job creation, review, etc.
+│   │   │   ├── _components/ # Admin-specific forms & components
+│   │   │   ├── home/     # Admin dashboard summary
+│   │   │   └── job-list/ # Detailed management of Jobs by Admin
+│   │   ├── home/         # Candidate home/dashboard
+│   │   ├── job-list/     # Candidate job discovery and application list
+│   │   └── profile/      # User profile management
+│   ├── apply-success/    # Post-application success feedback page
+│   ├── check-email/      # Notification screen after Magic Link request
+│   ├── globals.css       # Global Tailwind and base CSS
+│   ├── layout.tsx        # Global Application Layout Context
+│   └── middleware.ts     # Edge middleware for RBAC routing constraints
+├── components/           # Reusable generic UI elements (Shadcn forms, Modals)
+├── context/              # React Context Providers (Auth, Theme, Query)
+├── hooks/                # Custom React Hooks (use-toast, use-mobile, use-debounce)
+├── lib/                  # Library utilities
+│   ├── api.ts            # Consolidates all Axios API fetch/mutation bindings
+│   └── axios-client.ts   # Axios interceptor setup (Tokens configurations)
+├── public/               # Static assets (images, flags, icons)
+├── schemas/              # Zod validation schemas (e.g. dynamic profile/job requirements)
+├── types/                # Core TypeScript Type Definitions
+└── package.json          # Project configurations & dependency specifics
+```
 
-## 🚀 Quick Start
+## 🌊 Application Flow
 
-### Development
+### 1. Authentication Flow
+*   **Visiting Application**: The user encounters `middleware.ts`. If they are completely unauthenticated (`access_token` not in cookies), they are served pages within `app/(auth)`.
+*   **Standard Login**: Submit forms mapped via `lib/api.ts` -> backend -> Sets authentication Cookies.
+*   **Magic Link Flow**: The user enters an email -> Backend sends an Email. The user clicks the link -> The browser directs to `magic-login/verify?code=XXX`. The code gets submitted via `api.ts`, returning JWT tokens.
+*   **RBAC Redirection**: Upon successful authentication, candidates are forwarded to `/home` and admins to `/admin/home`.
 
+### 2. Administrator Flow
+*   **Job Management**: In `/admin/job-list`, an admin can view applications, create jobs using `JobForm.tsx`, and modify criteria.
+*   **Creating Needs**: Admins specify conditional form fields like `photoProfile`, `phoneNumber` to be "mandatory" or "optional" when creating job schema requirements.
+
+### 3. Candidate Application Flow
+*   **Finding Jobs**: Handled via `CandidateJobList` utilizing React Query.
+*   **Applying**: Using `ApplyFormModal.tsx` containing the `ApplyForm.tsx`. Form dynamically renders based on Admin's criteria (e.g., if rendering the Date of Birth or specific documents is required).
+*   **Gesture Interaction**: When image submissions are necessary, the Candidate opens `GestureCameraModal.tsx` which prompts `.estimateHands()` from TensorFlow. Recognizing 3 raised fingers programmatically snaps a photo capturing their gesture accurately inside the DOM via `canvas`.
+
+## 🛠 Setup & Installation
+
+### 1. Prerequisites
+Ensure you have `Node.js` v18+ and `npm` installed.
+
+### 2. Environment Variables
+Create a `.env` file from the `.env.example`:
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Setup environment
 cp .env.example .env
-# Edit .env with your backend API URL (NEXT_PUBLIC_API_URL)
+```
+Ensure `NEXT_PUBLIC_API_URL` points to the corresponding `be-hiring-platform` target (often `http://localhost:5001/api/v1`).
 
-# 3. Start development server
+### 3. Install NPM Packages
+```bash
+npm install
+```
+
+### 4. Run Development Server
+```bash
 npm run dev
 ```
+Navigate to `http://localhost:3000` to interact with the application.
 
-The application will be running at `http://localhost:3000`.
-
-### Production Build
-
-```bash
-npm run build
-npm start
-```
+## 🤝 Integrations & APIs
+*   **Axios Client**: Utilizes specific configurations mapped on `axios-client.ts`, specifically interceptors to route refresh-tokens (`x-skip-refresh` logic inside `/api.ts`).
+*   **TanStack Query**: Every data endpoint maps through highly predictable query keys (`['jobs']`) giving immediate optimistic UI changes on actions. 
 
 ---
-
-## 🔧 Environment Setup
-
-Create a `.env` or `.env.local` file with:
-
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:5001/api/v1
-```
-
----
-
-## ✨ Features Details
-
-### 1. Magic Link & Passwordless Auth
-Integration with the backend magic link system for a friction-less login experience. No more forgotten passwords.
-
-### 2. Gesture-Based Photo Capture
-Using **TensorFlow.js** and **MediaPipe**, users can trigger document scanning or photo capture using hand gestures, providing an innovative touchless experience.
-
-### 3. Dynamic Form Builder
-The frontend renders complex job application forms dynamically based on JSON schemas fetched from the backend. This allows changes to form fields without needing a new frontend deployment.
-
-### 4. Admin Dashboard
-A comprehensive dashboard for job management, candidate tracking, and application reviews.
-
----
-
-## 🚢 Deployment
-
-### Vercel Deployment
-
-1. Connect your GitHub repository to Vercel.
-2. Set the `NEXT_PUBLIC_API_URL` environment variable.
-3. Click "Deploy".
-
----
-
-## 📞 Contact
-
-For issues or questions:
-1. Check backend documentation
-2. Review frontend logs
-3. Test API integration with the backend
-
----
-
-**Happy Coding! 🚀**
+**Maintained by GetJob Team**
