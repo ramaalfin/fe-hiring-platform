@@ -32,10 +32,46 @@ export interface User {
     id: string;
     fullName: string;
     email: string;
-    role: "ADMIN" | "CANDIDATE";
+    role: "ADMIN" | "CANDIDATE" | "EMPLOYER";
     verified: boolean;
     createdAt: string;
     updatedAt: string;
+}
+
+// Employer / ATS Types
+export type ApplicationStatus = "APPLIED" | "SCREENING" | "INTERVIEW" | "OFFER" | "HIRED" | "REJECTED";
+
+export interface EmployerApplication {
+    id: string;
+    jobId: string;
+    userId: string;
+    status: ApplicationStatus;
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+    resume: ResumeData;
+    user?: {
+        id: string;
+        fullName: string;
+        email: string;
+    };
+}
+
+export type ApplicationsByStatus = Record<ApplicationStatus, EmployerApplication[]>;
+
+export interface ApplicationStatusHistory {
+    id: string;
+    applicationId: string;
+    fromStatus: ApplicationStatus;
+    toStatus: ApplicationStatus;
+    changedBy: string;
+    changedAt: string;
+    reason?: string;
+    changedByUser?: {
+        id: string;
+        fullName: string;
+        email: string;
+    };
 }
 
 // Job Types

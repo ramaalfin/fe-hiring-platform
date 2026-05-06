@@ -1,6 +1,7 @@
 // lib/api.ts
 import API from "./axios-client";
 import Cookies from "js-cookie";
+import { ApplicationsByStatus, ApplicationStatus, EmployerApplication } from "@/types/api";
 
 type LoginType = {
   email: string;
@@ -265,4 +266,40 @@ export const updateUserProfileMutationFn = async (data: {
     withCredentials: true,
   });
   return response.data;
+};
+
+/* ========================
+   EMPLOYER ATS
+======================== */
+
+export const getEmployerJobApplicationsFn = async (jobId: string) => {
+  const response = await API.get(`/employer/jobs/${jobId}/applications`);
+  return response.data.data as ApplicationsByStatus;
+};
+
+export const updateApplicationStatusFn = async (
+  appId: string,
+  status: ApplicationStatus,
+  reason?: string
+) => {
+  const response = await API.patch(`/employer/applications/${appId}/status`, {
+    status,
+    reason,
+  });
+  return response.data.data as EmployerApplication;
+};
+
+export const getApplicationStatusHistoryFn = async (appId: string) => {
+  const response = await API.get(`/employer/applications/${appId}/history`);
+  return response.data.data as import("@/types/api").ApplicationStatusHistory[];
+};
+
+export const updateApplicationNotesFn = async (
+  appId: string,
+  notes: string
+) => {
+  const response = await API.patch(`/employer/applications/${appId}/notes`, {
+    notes,
+  });
+  return response.data.data as EmployerApplication;
 };
