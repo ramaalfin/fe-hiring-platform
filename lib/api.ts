@@ -1,7 +1,7 @@
 // lib/api.ts
 import API from "./axios-client";
 import Cookies from "js-cookie";
-import { ApplicationsByStatus, ApplicationStatus, EmployerApplication } from "@/types/api";
+import { ApplicationsByStatus, ApplicationStatus, EmployerApplication, Job, PaginationMeta } from "@/types/api";
 
 type LoginType = {
   email: string;
@@ -227,6 +227,34 @@ export const getAdminJobsFn = async (adminId: string, token: string) => {
   });
 
   return response.data.data;
+};
+
+export interface JobSearchParams {
+  q?: string;
+  jobType?: string;
+  minSalary?: number;
+  maxSalary?: number;
+  page?: number;
+  limit?: number;
+}
+
+export const searchJobsQueryFn = async (
+  params: JobSearchParams
+): Promise<{ data: Job[]; pagination: PaginationMeta }> => {
+  // Build query params, omitting empty/zero values
+  const queryParams: Record<string, string | number> = {};
+  if (params.q) queryParams.q = params.q;
+  if (params.jobType) queryParams.jobType = params.jobType;
+  if (params.minSalary && params.minSalary > 0) queryParams.minSalary = params.minSalary;
+  if (params.maxSalary && params.maxSalary > 0) queryParams.maxSalary = params.maxSalary;
+  if (params.page) queryParams.page = params.page;
+  if (params.limit) queryParams.limit = params.limit;
+
+  const response = await API.get("/jobs/search", { params: queryParams });
+  return {
+    data: response.data.data as Job[],
+    pagination: response.data.pagination as PaginationMeta,
+  };
 };
 
 export const applyJobMutationFn = async (

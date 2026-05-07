@@ -1,12 +1,10 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getAllJobsQueryFn } from "@/lib/api";
+import { useState, useEffect } from "react";
+import { useJobSearch } from "@/hooks/use-job-search";
 import ApplyFormModal from "./ApplyFormModal";
-import { format } from "date-fns";
+import JobResultsDisplay from "./JobResultsDisplay";
 import {
   Drawer,
   DrawerClose,
@@ -17,47 +15,39 @@ import {
 import { Button } from "@/components/ui/button";
 import { Briefcase, DollarSign, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SearchInput from "@/app/(main)/employer/_components/SearchInput";
+import FilterPanel, { FilterValues } from "@/app/(main)/employer/_components/FilterPanel";
+import { Job } from "@/types/api";
 
-interface Job {
-  id: string;
-  jobName: string;
-  jobType: string;
-  jobDescription: string;
-  numberOfCandidateNeeded: number;
-  minimumSalary: string;
-  maximumSalary: string;
-  createdAt: string;
-  createdByUser: {
-    email: string;
-  };
-  minimumProfileInformationRequired: any;
-  hasApplied: boolean;
-}
+const EMPTY_FILTERS: FilterValues = {
+  jobType: "",
+  minSalary: 0,
+  maxSalary: 0,
+};
 
 const CandidateJobList = ({ token }: { token: string }) => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isMobile = useIsMobile();
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () => getAllJobsQueryFn(token),
-    enabled: !!token,
+  // Search / filter / pagination state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterValues>(EMPTY_FILTERS);
+  const [page, setPage] = useState(1);
+
+  // Reset to page 1 whenever search or filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, filters]);
+
+  const { jobs, pagination, isLoading, isFetching, isError, error, refetch } = useJobSearch({
+    query: searchQuery,
+    jobType: filters.jobType,
+    minSalary: filters.minSalary,
+    maxSalary: filters.maxSalary,
+    page,
+    limit: 20,
   });
-
-  const jobs: Job[] = data?.data ?? [];
-
-  const filteredJobs = useMemo(() => {
-    if (!jobs) return [];
-    if (!searchKeyword) return jobs;
-    const keyword = searchKeyword.toLowerCase();
-    return jobs.filter(
-      (job) =>
-        job.jobName.toLowerCase().includes(keyword) ||
-        job.jobDescription.toLowerCase().includes(keyword)
-    );
-  }, [jobs, searchKeyword]);
 
   const handleSelectJob = (job: Job) => {
     setSelectedJob(job);
@@ -66,6 +56,14 @@ const CandidateJobList = ({ token }: { token: string }) => {
 
   const handleCloseDrawer = () => {
     setIsDrawerOpen(false);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleFilterApply = (newFilters: FilterValues) => {
+    setFilters(newFilters);
   };
 
   const JobDetail = ({ job }: { job: Job }) => (
@@ -91,7 +89,7 @@ const CandidateJobList = ({ token }: { token: string }) => {
         </div>
 
         <ApplyFormModal
-          token={token!}
+          token={token}
           bgColor="bg-secondary"
           jobId={String(selectedJob?.id)}
           jobName={selectedJob?.jobName}
@@ -121,73 +119,39 @@ const CandidateJobList = ({ token }: { token: string }) => {
     </>
   );
 
-  if (isLoading)
-    return <p className="text-center text-gray-500 mt-8">Loading jobs...</p>;
-  if (isError)
-    return (
-      <p className="text-center text-red-500 mt-8">
-        Error: {(error as Error).message}
-      </p>
-    );
-
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search for jobs..."
-        value={searchKeyword}
-        onChange={(e) => setSearchKeyword(e.target.value)}
-        className="w-full sm:w-1/2"
-      />
+      {/* Search + Filter row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1">
+          <SearchInput
+            onSearch={handleSearch}
+            placeholder="Search for jobs..."
+            debounceMs={300}
+          />
+        </div>
+      </div>
 
-      {filteredJobs.length > 0 ? (
+      <FilterPanel onApply={handleFilterApply} />
+
+      {/* Left/right layout when jobs are available, or full-width display states */}
+      {!isLoading && !isError && jobs.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mt-4">
-          {/* LEFT SECTION - Job List */}
-          <div className="col-span-2 space-y-2 overflow-y-auto max-h-[80vh] pr-2">
-            {filteredJobs.map((job) => {
-              const isActive = selectedJob?.id === job.id;
-              return (
-                <div
-                  key={job.id}
-                  onClick={() => handleSelectJob(job)}
-                  className={`flex flex-col gap-2 rounded-xl p-4 cursor-pointer transition shadow-md ${
-                    isActive
-                      ? "bg-[#F7FEFF] border border-primary"
-                      : "bg-white border border-neutral-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="space-y-2 flex flex-col">
-                    <div className="flex flex-row gap-4 items-start">
-                      <Image
-                        width={50}
-                        height={50}
-                        src="/assets/logo/Logo.svg"
-                        alt="logo Get Job"
-                        className="w-12"
-                      />
-                      <div className="flex flex-col">
-                        <h3 className="font-semibold text-neutral-800">
-                          {job.jobName}
-                        </h3>
-                        <p className="text-sm text-neutral-600">
-                          {job.createdByUser?.email || "Company Unknown"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="h-px my-6 border-dashed border border-neutral-40"></div>
-                    <span className="text-neutral-90 text-sm">
-                      {job.jobType}
-                    </span>
-                    <span className="text-neutral-90 text-sm">
-                      Rp{parseInt(job.minimumSalary).toLocaleString()} - Rp
-                      {parseInt(job.maximumSalary).toLocaleString()}
-                    </span>
-                    <p className="text-xs text-neutral-500">
-                      Posted on {format(new Date(job.createdAt), "d MMM yyyy")}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+          {/* LEFT SECTION - Job Results */}
+          <div className="col-span-2">
+            <JobResultsDisplay
+              jobs={jobs}
+              pagination={pagination}
+              isLoading={isLoading}
+              isFetching={isFetching}
+              isError={isError}
+              error={error as Error | null}
+              selectedJobId={selectedJob?.id}
+              onSelectJob={handleSelectJob}
+              page={page}
+              onPageChange={setPage}
+              onRetry={refetch}
+            />
           </div>
 
           {/* RIGHT SECTION - Job Detail */}
@@ -221,13 +185,13 @@ const CandidateJobList = ({ token }: { token: string }) => {
                   </div>
 
                   <ApplyFormModal
-                    token={token!}
+                    token={token}
                     bgColor="bg-secondary"
-                    jobId={selectedJob?.id}
-                    jobName={selectedJob?.jobName}
-                    companyName={selectedJob?.createdByUser?.email}
+                    jobId={selectedJob.id}
+                    jobName={selectedJob.jobName}
+                    companyName={selectedJob.createdByUser?.email}
                     profileRequirements={
-                      selectedJob?.minimumProfileInformationRequired
+                      selectedJob.minimumProfileInformationRequired
                     }
                   />
                 </div>
@@ -246,23 +210,22 @@ const CandidateJobList = ({ token }: { token: string }) => {
           </div>
         </div>
       ) : (
-        <div className="min-h-screen flex flex-col items-center justify-center text-center space-y-4">
-          <Image
-            src="/assets/illustration/Empty State.svg"
-            alt="No Data"
-            width={1200}
-            height={800}
-            className="size-60 object-contain"
-          />
-          <h2 className="text-lg font-semibold text-neutral-90">
-            No job openings available
-          </h2>
-          <p className="text-neutral-90">
-            Create a job opening now and start the candidate process.
-          </p>
-        </div>
+        <JobResultsDisplay
+          jobs={jobs}
+          pagination={pagination}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          isError={isError}
+          error={error as Error | null}
+          selectedJobId={selectedJob?.id}
+          onSelectJob={handleSelectJob}
+          page={page}
+          onPageChange={setPage}
+          onRetry={refetch}
+        />
       )}
 
+      {/* Mobile drawer for job detail */}
       {isMobile && (
         <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
           <DrawerContent className="max-h-[90vh]">
