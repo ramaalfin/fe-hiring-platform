@@ -151,6 +151,53 @@ const ApplicationDetail = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Focus trap — keep Tab/Shift+Tab cycling within the modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const modalEl = overlayRef.current?.querySelector(
+      '[role="document"]'
+    ) as HTMLElement | null;
+    if (!modalEl) return;
+
+    const focusableSelectors = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(", ");
+
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      const focusableElements = Array.from(
+        modalEl.querySelectorAll<HTMLElement>(focusableSelectors)
+      ).filter((el) => !el.closest('[aria-hidden="true"]'));
+
+      if (focusableElements.length === 0) return;
+
+      const firstEl = focusableElements[0];
+      const lastEl = focusableElements[focusableElements.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleFocusTrap);
+    return () => document.removeEventListener("keydown", handleFocusTrap);
+  }, [isOpen]);
+
   // Prevent body scroll while modal is open
   useEffect(() => {
     if (isOpen) {

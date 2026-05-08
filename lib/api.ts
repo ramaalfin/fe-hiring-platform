@@ -1,7 +1,7 @@
 // lib/api.ts
 import API from "./axios-client";
 import Cookies from "js-cookie";
-import { ApplicationsByStatus, ApplicationStatus, EmployerApplication, Job, PaginationMeta } from "@/types/api";
+import { ApplicationsByStatus, ApplicationStatus, EmployerApplication, EmployerJob, Job, PaginationMeta } from "@/types/api";
 
 type LoginType = {
   email: string;
@@ -300,6 +300,25 @@ export const updateUserProfileMutationFn = async (data: {
    EMPLOYER ATS
 ======================== */
 
+export const getEmployerJobsFn = async (params?: {
+  search?: string;
+  jobType?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ data: EmployerJob[]; meta?: PaginationMeta }> => {
+  const queryParams: Record<string, string | number> = {};
+  if (params?.search) queryParams.search = params.search;
+  if (params?.jobType) queryParams.jobType = params.jobType;
+  if (params?.page) queryParams.page = params.page;
+  if (params?.limit) queryParams.limit = params.limit;
+
+  const response = await API.get("/employer/jobs", { params: queryParams });
+  return {
+    data: response.data.data as EmployerJob[],
+    meta: response.data.meta as PaginationMeta | undefined,
+  };
+};
+
 export const getEmployerJobApplicationsFn = async (jobId: string) => {
   const response = await API.get(`/employer/jobs/${jobId}/applications`);
   return response.data.data as ApplicationsByStatus;
@@ -330,4 +349,34 @@ export const updateApplicationNotesFn = async (
     notes,
   });
   return response.data.data as EmployerApplication;
+};
+
+/* ========================
+   EMPLOYER JOB CRUD
+======================== */
+
+export const createEmployerJobMutationFn = async (
+  data: import("@/schemas/employerJobSchema").EmployerJobFormValues
+): Promise<{ data: EmployerJob }> => {
+  const response = await API.post("/employer/jobs", data);
+  return response.data;
+};
+
+export const updateEmployerJobMutationFn = async (
+  id: string,
+  data: Partial<import("@/schemas/employerJobSchema").EmployerJobFormValues>
+): Promise<{ data: EmployerJob }> => {
+  const response = await API.patch(`/employer/jobs/${id}`, data);
+  return response.data;
+};
+
+export const deleteEmployerJobMutationFn = async (id: string): Promise<void> => {
+  await API.delete(`/employer/jobs/${id}`);
+};
+
+export const getEmployerJobByIdFn = async (
+  id: string
+): Promise<{ data: EmployerJob }> => {
+  const response = await API.get(`/employer/jobs/${id}`);
+  return response.data;
 };

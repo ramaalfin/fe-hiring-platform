@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -8,7 +8,23 @@ import { getEmployerJobApplicationsFn, updateApplicationStatusFn } from "@/lib/a
 import { ApplicationStatus, ApplicationsByStatus, EmployerApplication } from "@/types/api";
 import { useToast } from "@/hooks/use-toast";
 import KanbanColumn from "./KanbanColumn";
-import ApplicationDetail from "./ApplicationDetail";
+
+// Lazy-load ApplicationDetail to reduce initial bundle size
+const ApplicationDetail = lazy(() => import("./ApplicationDetail"));
+
+// Visually hidden style — hides content from sighted users while keeping it
+// accessible to screen readers (equivalent to Tailwind's sr-only utility).
+const VISUALLY_HIDDEN_STYLE: React.CSSProperties = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  borderWidth: 0,
+};
 
 interface KanbanBoardProps {
   jobId: string;
@@ -94,17 +110,17 @@ const KanbanBoard = ({ jobId }: KanbanBoardProps) => {
     useState<EmployerApplication | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const handleOpenDetail = (application: EmployerApplication) => {
+  const handleOpenDetail = useCallback((application: EmployerApplication) => {
     setSelectedApplication(application);
     setIsDetailOpen(true);
-  };
+  }, []);
 
-  const handleCloseDetail = () => {
+  const handleCloseDetail = useCallback(() => {
     setIsDetailOpen(false);
     // Keep selectedApplication in state briefly so the closing animation
     // can still render the content, then clear it.
     setTimeout(() => setSelectedApplication(null), 200);
-  };
+  }, []);
 
   const {
     data: queryData,
@@ -130,7 +146,7 @@ const KanbanBoard = ({ jobId }: KanbanBoardProps) => {
     }
   }, [queryData]);
 
-  const handleDragEnd = async (result: DropResult) => {
+  const handleDragEnd = useCallback(async (result: DropResult) => {
     const { source, destination, draggableId } = result;
 
     // 1. Validate drop
@@ -144,6 +160,14 @@ const KanbanBoard = ({ jobId }: KanbanBoardProps) => {
     const sourceStatus = source.droppableId as ApplicationStatus;
     const newStatus = destination.droppableId as ApplicationStatus;
     const appId = draggableId;
+
+    // Performance mark: start of drag-and-drop handling
+    const perfMarkStart = `dnd-start-${appId}`;
+    const perfMarkEnd = `dnd-end-${appId}`;
+    const perfMeasure = `dnd-duration-${appId}`;
+    if (typeof performance !== "undefined") {
+      performance.mark(perfMarkStart);
+    }
 
     // Snapshot previous state for potential revert
     const previousState = { ...applicationsByStatus };
@@ -162,6 +186,26 @@ const KanbanBoard = ({ jobId }: KanbanBoardProps) => {
       ];
       return updated;
     });
+
+    // Performance mark: after optimistic UI update (this is the <100ms target)
+    if (typeof performance !== "undefined") {
+      performance.mark(perfMarkEnd);
+      try {
+        performance.measure(perfMeasure, perfMarkStart, perfMarkEnd);
+        const [measure] = performance.getEntriesByName(perfMeasure);
+        if (measure && measure.duration > 100) {
+          console.warn(
+            `[PERF] Drag-and-drop UI update took ${measure.duration.toFixed(1)}ms (target: <100ms)`
+          );
+        }
+        // Clean up performance entries
+        performance.clearMarks(perfMarkStart);
+        performance.clearMarks(perfMarkEnd);
+        performance.clearMeasures(perfMeasure);
+      } catch {
+        // Performance API not fully supported — ignore
+      }
+    }
 
     // 3. API call
     try {
@@ -185,7 +229,37 @@ const KanbanBoard = ({ jobId }: KanbanBoardProps) => {
         variant: "destructive",
       });
     }
-  };
+  }, [applicationsByStatus, jobId, queryClient, toast]);
+
+  const handleStatusChange = useCallback((appId: string, newStatus: ApplicationStatus) => {
+    // Update local optimistic state so the board reflects the change
+    setApplicationsByStatus((prev) => {
+      const updated = { ...prev };
+      let movedApp: EmployerApplication | undefined;
+
+      // Remove from all columns
+      for (const s of STATUSES) {
+        const idx = updated[s].findIndex((a) => a.id === appId);
+        if (idx !== -1) {
+          movedApp = { ...updated[s][idx], status: newStatus };
+          updated[s] = updated[s].filter((a) => a.id !== appId);
+          break;
+        }
+      }
+
+      // Add to new column
+      if (movedApp) {
+        updated[newStatus] = [...updated[newStatus], movedApp];
+      }
+
+      return updated;
+    });
+
+    // Also update the selected application so the modal reflects the new status
+    setSelectedApplication((prev) =>
+      prev ? { ...prev, status: newStatus } : prev
+    );
+  }, []);
 
   if (isLoading) return <KanbanSkeleton />;
 
@@ -219,52 +293,39 @@ const KanbanBoard = ({ jobId }: KanbanBoardProps) => {
         </div>
       )}
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {STATUSES.map((status) => (
-          <KanbanColumn
-            key={status}
-            status={status}
-            applications={applicationsByStatus[status] ?? []}
-            colorConfig={COLOR_CONFIG[status]}
-            onOpen={handleOpenDetail}
-          />
-        ))}
+      <div role="region" aria-label="Application kanban board">
+        {/* Visually hidden keyboard instructions for screen readers */}
+        <p id="kanban-keyboard-instructions" style={VISUALLY_HIDDEN_STYLE}>
+          Kanban board: Use Tab to navigate between application cards. Press
+          Space or Enter to pick up a card, use arrow keys to move it between
+          columns, then press Space or Enter to drop it. Press Escape to cancel.
+        </p>
+
+        <div
+          className="flex gap-4 overflow-x-auto pb-4"
+          role="list"
+          aria-label="Application status columns"
+        >
+          {STATUSES.map((status) => (
+            <KanbanColumn
+              key={status}
+              status={status}
+              applications={applicationsByStatus[status] ?? []}
+              colorConfig={COLOR_CONFIG[status]}
+              onOpen={handleOpenDetail}
+            />
+          ))}
+        </div>
       </div>
 
-      <ApplicationDetail
-        application={selectedApplication}
-        isOpen={isDetailOpen}
-        onClose={handleCloseDetail}
-        onStatusChange={(appId, newStatus) => {
-          // Update local optimistic state so the board reflects the change
-          setApplicationsByStatus((prev) => {
-            const updated = { ...prev };
-            let movedApp: EmployerApplication | undefined;
-
-            // Remove from all columns
-            for (const s of STATUSES) {
-              const idx = updated[s].findIndex((a) => a.id === appId);
-              if (idx !== -1) {
-                movedApp = { ...updated[s][idx], status: newStatus };
-                updated[s] = updated[s].filter((a) => a.id !== appId);
-                break;
-              }
-            }
-
-            // Add to new column
-            if (movedApp) {
-              updated[newStatus] = [...updated[newStatus], movedApp];
-            }
-
-            return updated;
-          });
-
-          // Also update the selected application so the modal reflects the new status
-          setSelectedApplication((prev) =>
-            prev ? { ...prev, status: newStatus } : prev
-          );
-        }}
-      />
+      <Suspense fallback={null}>
+        <ApplicationDetail
+          application={selectedApplication}
+          isOpen={isDetailOpen}
+          onClose={handleCloseDetail}
+          onStatusChange={handleStatusChange}
+        />
+      </Suspense>
     </DragDropContext>
   );
 };

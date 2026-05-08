@@ -39,6 +39,8 @@ const ApplicationCard = memo(function ApplicationCard({
           role="button"
           tabIndex={0}
           aria-label={`Application from ${candidateName}, status: ${application.status}`}
+          aria-roledescription="draggable application card"
+          aria-describedby="kanban-keyboard-instructions"
           onClick={() => {
             if (!snapshot.isDragging) {
               onOpen(application);

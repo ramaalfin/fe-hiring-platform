@@ -8,7 +8,7 @@ type UserType = {
   id: string;
   fullName: string;
   email: string;
-  role: "ADMIN" | "CANDIDATE";
+  role: "ADMIN" | "CANDIDATE" | "EMPLOYER";
   isDefaultPassword?: boolean;
   createdAt: string;
   updatedAt: string;

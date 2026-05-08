@@ -10,6 +10,7 @@ import {
   SunIcon,
   Briefcase,
   User,
+  LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -79,6 +80,26 @@ const Asidebar = () => {
         {
           title: "Job List",
           url: "/job-list",
+          icon: Briefcase,
+        },
+        {
+          title: "Profile",
+          url: "/profile",
+          icon: User,
+        },
+      ];
+    }
+
+    if (user.role === "EMPLOYER") {
+      return [
+        {
+          title: "Dashboard",
+          url: "/employer/dashboard",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Jobs",
+          url: "/employer/jobs",
           icon: Briefcase,
         },
         {

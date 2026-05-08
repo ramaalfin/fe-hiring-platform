@@ -111,6 +111,22 @@ export interface Job {
     };
 }
 
+export interface EmployerJob {
+    id: string;
+    jobName: string;
+    jobType: string;
+    jobDescription: string;
+    numberOfCandidateNeeded: number;
+    minimumSalary: string;
+    maximumSalary: string;
+    employerId: string;
+    createdAt: string;
+    updatedAt: string;
+    _count?: {
+        applications: number;
+    };
+}
+
 export interface CreateJobDTO {
     jobName: string;
     jobType: string;

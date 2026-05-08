@@ -4,35 +4,19 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Briefcase, ChevronDown } from "lucide-react";
 import KanbanBoard from "../_components/KanbanBoard";
-import { getAllJobsQueryFn } from "@/lib/api";
-import { useAuthContext } from "@/context/auth-provider";
-import Cookies from "js-cookie";
-
-interface EmployerJob {
-  id: string;
-  jobName: string;
-  jobType: string;
-  _count?: { applications: number };
-}
+import { getEmployerJobsFn } from "@/lib/api";
+import { EmployerJob } from "@/types/api";
 
 const EmployerDashboardPage = () => {
-  const { user } = useAuthContext();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const token = Cookies.get("access_token") || "";
-
   const { data: jobsData, isLoading: jobsLoading } = useQuery({
     queryKey: ["employerJobs"],
-    queryFn: () => getAllJobsQueryFn(token),
-    enabled: !!token,
+    queryFn: () => getEmployerJobsFn(),
   });
 
-  // Filter jobs that belong to this employer
-  const employerJobs: EmployerJob[] = (jobsData?.data ?? []).filter(
-    (job: any) => job.employerId === user?.id
-  );
-
+  const employerJobs: EmployerJob[] = jobsData?.data ?? [];
   const selectedJob = employerJobs.find((j) => j.id === selectedJobId);
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo, useId } from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import { ApplicationStatus, EmployerApplication } from "@/types/api";
 import ApplicationCard from "./ApplicationCard";
@@ -27,11 +27,14 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
   REJECTED: "Rejected",
 };
 
-const KanbanColumn = ({ status, applications, colorConfig, onOpen }: KanbanColumnProps) => {
+const KanbanColumn = memo(function KanbanColumn({ status, applications, colorConfig, onOpen }: KanbanColumnProps) {
+  const headerId = useId();
+
   return (
-    <div className="flex flex-col min-w-[220px] w-[220px] flex-shrink-0">
+    <div role="listitem" className="flex flex-col min-w-[220px] w-[220px] flex-shrink-0">
       {/* Column header */}
       <div
+        id={headerId}
         className={`rounded-t-lg px-3 py-2 flex items-center justify-between ${colorConfig.bg} border ${colorConfig.border}`}
       >
         <span className={`text-sm font-semibold ${colorConfig.text}`}>
@@ -50,7 +53,7 @@ const KanbanColumn = ({ status, applications, colorConfig, onOpen }: KanbanColum
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            aria-label={`${STATUS_LABELS[status]} column`}
+            aria-labelledby={headerId}
             className={`
               flex-1 min-h-[400px] rounded-b-lg border-x border-b p-2 transition-colors duration-150
               ${colorConfig.border}
@@ -71,6 +74,8 @@ const KanbanColumn = ({ status, applications, colorConfig, onOpen }: KanbanColum
       </Droppable>
     </div>
   );
-};
+});
+
+KanbanColumn.displayName = "KanbanColumn";
 
 export default KanbanColumn;

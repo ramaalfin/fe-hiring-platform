@@ -7,18 +7,27 @@ import { ChevronRight } from "lucide-react";
 const Header = () => {
   const pathname = usePathname();
   const pathSegments = pathname.split("/").filter(Boolean);
-  const isDetailPage =
+
+  const isAdminJobDetail =
     pathSegments.length === 3 &&
     pathSegments[0] === "admin" &&
     pathSegments[1] === "job-list";
-  const lastSegment = pathSegments.pop();
+
+  const isEmployerJobDetail =
+    pathSegments.length === 3 &&
+    pathSegments[0] === "employer" &&
+    pathSegments[1] === "jobs";
+
+  const isDetailPage = isAdminJobDetail || isEmployerJobDetail;
+
+  const lastSegment = pathSegments[pathSegments.length - 1];
 
   // Clear characters like hyphen or underscore
   const formattedSegment = lastSegment
     ?.replace(/[-_]/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-  const breadcrumb = isDetailPage ? (
+  const adminBreadcrumb = isAdminJobDetail ? (
     <div className="flex items-center gap-2">
       <div className="bg-white border-2 border-neutral-40 px-4 p-1 rounded-md">
         <span className="text-neutral-1000 text-sm font-semibold">
@@ -35,6 +44,24 @@ const Header = () => {
       </div>
     </div>
   ) : null;
+
+  const employerBreadcrumb = isEmployerJobDetail ? (
+    <div className="flex items-center gap-2">
+      <div className="bg-white border-2 border-neutral-40 px-4 p-1 rounded-md">
+        <span className="text-neutral-1000 text-sm font-semibold">Jobs</span>
+      </div>
+      <span className="text-neutral-1000">
+        <ChevronRight />
+      </span>
+      <div className="bg-neutral-30 border-2 border-neutral-40 px-4 p-1 rounded-md">
+        <span className="text-neutral-1000 text-sm font-semibold">
+          Job Detail
+        </span>
+      </div>
+    </div>
+  ) : null;
+
+  const breadcrumb = adminBreadcrumb || employerBreadcrumb;
 
   return (
     <div className="w-full">
